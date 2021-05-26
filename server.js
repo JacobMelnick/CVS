@@ -1,33 +1,58 @@
-const express = require('express')
-const path = require('path')
-const app = express()
-const bodyParser = require('body-parser')
-const router = express.Router()
-
-const PORT = 5500
-// app.use(express.static(path.join(__dirname + './client')))
-// app.use(express.static('client'))
-
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
-app.use(bodyParser.json())
-var jsonParser = bodyParser.json()
-
-// app.use(bodyParser.json());
-
-app.get('/', (req, res) => {
-    console.log('hello')
-    res.render('form')
-    
-})
+const express = require("express");
+const path = require("path");
+const app = express();
 
 
-app.post('/', jsonParser, (req, res) => {
-    console.log('hello')
-    console.log(JSON.stringify(req.body))
-    // res.write(jsonParser(req.body))
-    res.end(JSON.stringify(req.body, null, 2))
-}) 
+const port = process.env.PORT || 5500;
 
-app.listen(PORT, () => {
-    console.log(`app is listening on http://localhost:${PORT}`)
-})
+// document.getElementById('form').addEventListener('click', (event) => {
+//     event.preventDefault()
+// })
+
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+app.get("/", (req, res) => {
+  console.log("hello");
+  res.render("index", {title: 'hey'})
+});
+
+app.post("/", (req, res) => {
+  const body = JSON.parse(req.body.key);
+    res.end( handleFile(body).join(''))
+});
+
+app.listen(port, () => {
+  console.log(`app is listening on http://localhost:${port}`);
+});
+
+const handleFile = (body) => {
+  let cvs = [];
+  const keys = Object.keys(body);
+  cvs.push(keys + "\r\n");
+  cvs.push(
+    `${body.firstName}, ${body.lastName}, ${body.county}, ${body.city}, ${body.role}, ${body.sales},  \r\n`
+  );
+
+  if (body.children.length > 0) {
+    body.children.map((song) => {
+      if (song.children.length > 0) {
+        cvs.push(
+          `${song.firstName}, ${song.lastName}, ${song.county}, ${song.city}, ${song.role}, ${song.sales},  \r\n`
+        );
+        song.children.map((nextSongs) => {
+          cvs.push(Object.values(nextSongs) + "\r\n");
+        });
+      } else {
+        cvs.push(Object.values(song) + "\r\n");
+      }
+    });
+  }
+
+  console.log(cvs.join(""));
+  return cvs;
+};
